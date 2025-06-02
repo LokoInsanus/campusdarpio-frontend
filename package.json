@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "sass": "sass src/assets/scss/main.scss src/assets/css/bootstrap-custom.css",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && npm run sass",
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
