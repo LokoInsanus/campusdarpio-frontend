@@ -1,5 +1,5 @@
 import { type FC } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import Header from '../components/Header';
 import HomePage from './HomePage';
 import Cadastros from './Cadastros';
@@ -27,7 +27,7 @@ import ListagemEntrega from './listagens/ListagemEntrega';
 
 const App: FC = () => {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Header />
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -56,7 +56,7 @@ const App: FC = () => {
         <Route path="/listagem/pedido" element={<ListagemPedido />} />
         <Route path="/listagem/entrega" element={<ListagemEntrega />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 };
 

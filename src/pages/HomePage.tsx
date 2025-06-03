@@ -2,25 +2,35 @@ import { type FC } from "react";
 import { NavLink } from "react-router-dom";
 import Card from "../components/Card";
 
-const cards = [
-  { to: "/cadastros", title: "Cadastros", description: "Realizar cadastros" },
-  { to: "/listagens", title: "Listagens", description: "Ver listagens" },
-  { to: "/cardapio", title: "Cardápio", description: "Editar cardápio" },
-  { to: "/pedido", title: "Pedido", description: "Realizar pedidos" },
-  { to: "/entrega", title: "Entrega", description: "Gerenciar entregas" }
-];
-
 const HomePage: FC = () => {
   return (
     <div className="container mt-5">
       <div className="row g-3">
-        {cards.map((paginas, idx) => (
-          <div key={paginas.to} className={`col-3${idx % 2 === 0 ? " offset-3" : ""}`}>
-            <NavLink to={paginas.to} className="text-decoration-none w-100" end>
-              <Card title={paginas.title} description={paginas.description} />
-            </NavLink>
-          </div>
-        ))}
+        <div className="col-3 offset-3">
+          <NavLink to="/cadastros" className="text-decoration-none w-100" end>
+            <Card title="Cadastros" description="Realizar cadastros" />
+          </NavLink>
+        </div>
+        <div className="col-3">
+          <NavLink to="/listagens" className="text-decoration-none w-100" end>
+            <Card title="Listagens" description="Ver listagens" />
+          </NavLink>
+        </div>
+        <div className="col-3 offset-3">
+          <NavLink to="/cardapio" className="text-decoration-none w-100" end>
+            <Card title="Cardápio" description="Editar cardápio" />
+          </NavLink>
+        </div>
+        <div className="col-3">
+          <NavLink to="/pedido" className="text-decoration-none w-100" end>
+            <Card title="Pedido" description="Realizar pedidos" />
+          </NavLink>
+        </div>
+        <div className="col-3 offset-3">
+          <NavLink to="/entrega" className="text-decoration-none w-100" end>
+            <Card title="Entrega" description="Gerenciar entregas" />
+          </NavLink>
+        </div>
       </div>
     </div>
   );
