@@ -1,11 +1,13 @@
 import { NavLink, Link } from "react-router-dom";
 import { type FC } from "react";
+import campuscarpioLogo from "../assets/img/campusdarpio-branco.png";
 
 const Header: FC = () => {
   return (
     <header className="bg-primary text-white p-3">
       <nav className="container d-flex justify-content-between align-items-center">
-        <Link to="/" className="text-white text-decoration-none">
+        <Link to="/" className="d-flex align-items-center text-white text-decoration-none">
+          <img src={campuscarpioLogo} width={50} height={40} className="img-fluid" />
           <h1>Campusdarpio</h1>
         </Link>
         <ul className="nav">
