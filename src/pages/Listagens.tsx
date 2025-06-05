@@ -3,16 +3,16 @@ import { NavLink } from "react-router-dom";
 import Card from "../components/Card";
 
 const listagens = [
-  { to: "/listagens/cliente", title: "Cliente", description: "Listar clientes" },
-  { to: "/listagens/funcionario", title: "Funcionário", description: "Listar funcionários" },
-  { to: "/listagens/entregador", title: "Entregador", description: "Listar entregadores" },
-  { to: "/listagens/bloco", title: "Bloco", description: "Listar blocos" },
-  { to: "/listagens/campus", title: "Campus", description: "Listar campi" },
-  { to: "/listagens/refeicao", title: "Refeição", description: "Listar refeições" },
-  { to: "/listagens/bebida", title: "Bebida", description: "Listar bebidas" },
-  { to: "/listagens/cardapio", title: "Cardápio", description: "Listar cardápios" },
-  { to: "/listagens/pedido", title: "Pedido", description: "Listar pedidos" },
-  { to: "/listagens/entrega", title: "Entrega", description: "Listar entregas" }
+  { to: "/listagem/cliente", title: "Cliente", description: "Listar clientes" },
+  { to: "/listagem/funcionario", title: "Funcionário", description: "Listar funcionários" },
+  { to: "/listagem/entregador", title: "Entregador", description: "Listar entregadores" },
+  { to: "/listagem/bloco", title: "Bloco", description: "Listar blocos" },
+  { to: "/listagem/campus", title: "Campus", description: "Listar campi" },
+  { to: "/listagem/refeicao", title: "Refeição", description: "Listar refeições" },
+  { to: "/listagem/bebida", title: "Bebida", description: "Listar bebidas" },
+  { to: "/listagem/cardapio", title: "Cardápio", description: "Listar cardápios" },
+  { to: "/listagem/pedido", title: "Pedido", description: "Listar pedidos" },
+  { to: "/listagem/entrega", title: "Entrega", description: "Listar entregas" }
 ];
 
 const Listagens: FC = () => {

@@ -3,13 +3,13 @@ import { NavLink } from "react-router-dom";
 import Card from "../components/Card";
 
 const cadastros = [
-  { to: "/cadastros/cliente", title: "Cliente", description: "Cadastrar clientes" },
-  { to: "/cadastros/funcionario", title: "Funcionário", description: "Cadastrar funcionários" },
-  { to: "/cadastros/entregador", title: "Entregador", description: "Cadastrar entregadores" },
-  { to: "/cadastros/bloco", title: "Bloco", description: "Cadastrar blocos" },
-  { to: "/cadastros/campus", title: "Campus", description: "Cadastrar campi" },
-  { to: "/cadastros/refeicao", title: "Refeição", description: "Cadastrar refeições" },
-  { to: "/cadastros/bebida", title: "Bebida", description: "Cadastrar bebidas" },
+  { to: "/cadastro/cliente", title: "Cliente", description: "Cadastrar clientes" },
+  { to: "/cadastro/funcionario", title: "Funcionário", description: "Cadastrar funcionários" },
+  { to: "/cadastro/entregador", title: "Entregador", description: "Cadastrar entregadores" },
+  { to: "/cadastro/bloco", title: "Bloco", description: "Cadastrar blocos" },
+  { to: "/cadastro/campus", title: "Campus", description: "Cadastrar campi" },
+  { to: "/cadastro/refeicao", title: "Refeição", description: "Cadastrar refeições" },
+  { to: "/cadastro/bebida", title: "Bebida", description: "Cadastrar bebidas" },
 ];
 
 const Cadastros: FC = () => {

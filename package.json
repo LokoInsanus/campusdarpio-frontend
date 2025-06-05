@@ -6,13 +6,14 @@
   "scripts": {
     "dev": "vite",
     "sass": "sass src/assets/scss/main.scss src/assets/css/bootstrap-custom.css",
-    "build": "tsc -b && vite build && npm run sass",
+    "build": "tsc -b && npm run sass && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "axios": "^1.9.0",
     "bootstrap": "^5.3.6",
     "campusdarpio-frontend": "file:",
     "react": "^19.1.0",
