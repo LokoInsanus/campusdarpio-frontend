@@ -1,6 +1,6 @@
 import { type FC, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import clienteService from '../../services/ClienteService';
+import clienteService from '../../services/clienteService';
 
 const ListagemCliente: FC = () => {
   const [clientes, setClientes] = useState<any[]>([]);
