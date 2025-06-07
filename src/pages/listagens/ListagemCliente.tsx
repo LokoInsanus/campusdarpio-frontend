@@ -48,8 +48,10 @@ const ListagemCliente: FC = () => {
           <tr>
             <th>ID</th>
             <th>Nome</th>
+            <th>CPF</th>
             <th>Status</th>
             <th>Telefone</th>
+            <th>Endereço</th>
             <th>Ações</th>
           </tr>
         </thead>
@@ -59,8 +61,10 @@ const ListagemCliente: FC = () => {
               <tr key={c.id}>
                 <td>{c.id}</td>
                 <td>{c.nome}</td>
+                <td>{c.cpf}</td>
                 <td>{c.status}</td>
                 <td>{c.telefone}</td>
+                <td>{c.endereco}</td>
                 <td>
                   <button
                     className="btn btn-sm btn-warning me-2"
@@ -79,7 +83,7 @@ const ListagemCliente: FC = () => {
             ))
           ) : (
             <tr>
-              <td colSpan={5} className="text-center">
+              <td colSpan={7} className="text-center">
                 Carregando clientes…
               </td>
             </tr>

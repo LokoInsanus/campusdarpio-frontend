@@ -1,7 +1,7 @@
 import { api } from './api';
 
 const funcionarioService = {
-  async getFuncionario() {
+  async getFuncionarios() {
     while (true) {
       try {
         const { data } = await api.get('/Funcionario');
