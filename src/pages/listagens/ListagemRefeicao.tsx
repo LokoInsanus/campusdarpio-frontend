@@ -1,38 +1,47 @@
-import { type FC, useEffect, useState } from 'react';
+import { type FC } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import refeicaoService from '../../services/refeicaoService';
+import { toast } from 'react-hot-toast';
+
+interface Refeicao {
+  id: number;
+  nome: string;
+  descricao: string;
+  tipo: string;
+  preco: string;
+  quantidade: string;
+}
 
 const ListagemRefeicao: FC = () => {
-  const [refeicoes, setRefeicoes] = useState<any[]>([]);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const fetchRefeicoes = async () => {
-    try {
-      const list = await refeicaoService.getRefeicoes();
-      setRefeicoes(list);
-    } catch (err) {
-      console.error('Erro ao buscar refeicoes:', err);
+  const { data: refeicoes, isLoading, isError, error } = useQuery<Refeicao[]>({
+    queryKey: ['refeicoes'],
+    queryFn: refeicaoService.getRefeicoes,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: refeicaoService.deleteRefeicao,
+    onSuccess: () => {
+      toast.success('Refeição excluída com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['refeicoes'] });
+    },
+    onError: (err: any) => {
+      toast.error(`Erro ao excluir refeição: ${err.message}`);
+    },
+  });
+
+  const handleDelete = (id: number) => {
+    const confirma = window.confirm('Deseja realmente excluir esta refeição?');
+    if (confirma) {
+      deleteMutation.mutate(id);
     }
   };
 
-  useEffect(() => {
-    fetchRefeicoes();
-  }, []);
-
-  const handleDelete = async (id: number) => {
-    const confirma = window.confirm('Deseja realmente excluir este refeicao?');
-    if (!confirma) return;
-
-    try {
-      await refeicaoService.deleteRefeicao(id);
-      await fetchRefeicoes();
-    } catch (err) {
-      console.error('Erro ao excluir refeicao:', err);
-    }
-  };
-
-  const handleEdit = (id: number) => {
-    navigate(`/cadastrar/refeicao/${id}`);
+  const handleEdit = (refeicaoId: number) => {
+    navigate(`/cadastro/refeicao/edit/${refeicaoId}`);
   };
 
   return (
@@ -40,7 +49,7 @@ const ListagemRefeicao: FC = () => {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h1 className="mb-0">Refeições</h1>
         <Link to="/cadastro/refeicao" className="btn btn-primary">
-          Novo Refeição
+          Nova Refeição
         </Link>
       </div>
       <table className="table table-striped align-items-center text-center">
@@ -56,8 +65,22 @@ const ListagemRefeicao: FC = () => {
           </tr>
         </thead>
         <tbody>
-          {refeicoes.length > 0 ? (
-            refeicoes.map(c => (
+          {isLoading ? (
+            <tr>
+              <td colSpan={7} className="text-center">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Carregando...</span>
+                </div>
+              </td>
+            </tr>
+          ) : isError ? (
+            <tr>
+              <td colSpan={7} className="text-center text-danger">
+                Erro ao carregar refeições: {error.message}
+              </td>
+            </tr>
+          ) : (
+            refeicoes?.map(c => (
               <tr key={c.id}>
                 <td>{c.id}</td>
                 <td>{c.nome}</td>
@@ -75,18 +98,13 @@ const ListagemRefeicao: FC = () => {
                   <button
                     className="btn btn-sm btn-danger"
                     onClick={() => handleDelete(c.id)}
+                    disabled={deleteMutation.isPending && deleteMutation.variables === c.id}
                   >
-                    Excluir
+                    {deleteMutation.isPending && deleteMutation.variables === c.id ? 'Excluindo...' : 'Excluir'}
                   </button>
                 </td>
               </tr>
             ))
-          ) : (
-            <tr>
-              <td colSpan={7} className="text-center">
-                Carregando refeicoes…
-              </td>
-            </tr>
           )}
         </tbody>
       </table>

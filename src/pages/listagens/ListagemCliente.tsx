@@ -1,38 +1,47 @@
-import { type FC, useEffect, useState } from 'react';
+import { type FC } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import clienteService from '../../services/clienteService';
+import { toast } from 'react-hot-toast';
+
+interface Client {
+  id: number;
+  nome: string;
+  cpf: string;
+  status: string;
+  telefone: string;
+  endereco: string;
+}
 
 const ListagemCliente: FC = () => {
-  const [clientes, setClientes] = useState<any[]>([]);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const fetchClientes = async () => {
-    try {
-      const list = await clienteService.getClientes();
-      setClientes(list);
-    } catch (err) {
-      console.error('Erro ao buscar clientes:', err);
+  const { data: clientes, isLoading, isError, error } = useQuery<Client[]>({
+    queryKey: ['clientes'],
+    queryFn: clienteService.getClientes
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: clienteService.deleteCliente,
+    onSuccess: () => {
+      toast.success('Cliente excluído com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['clientes'] });
+    },
+    onError: (err: any) => {
+      toast.error(`Erro ao excluir cliente: ${err.message}`);
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchClientes();
-  }, []);
-
-  const handleDelete = async (id: number) => {
+  const handleDelete = (id: number) => {
     const confirma = window.confirm('Deseja realmente excluir este cliente?');
-    if (!confirma) return;
-
-    try {
-      await clienteService.deleteCliente(id);
-      await fetchClientes();
-    } catch (err) {
-      console.error('Erro ao excluir cliente:', err);
+    if (confirma) {
+      deleteMutation.mutate(id);
     }
   };
 
-  const handleEdit = (id: number) => {
-    navigate(`/cadastrar/cliente/${id}`);
+  const handleEdit = (clientId: number) => {
+    navigate(`/cadastro/cliente/edit/${clientId}`);
   };
 
   return (
@@ -56,8 +65,22 @@ const ListagemCliente: FC = () => {
           </tr>
         </thead>
         <tbody>
-          {clientes.length > 0 ? (
-            clientes.map(c => (
+          {isLoading ? (
+            <tr>
+              <td colSpan={7} className="text-center">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Carregando...</span>
+                </div>
+              </td>
+            </tr>
+          ) : isError ? (
+            <tr>
+              <td colSpan={7} className="text-center text-danger">
+                Erro ao carregar clientes: {error.message}
+              </td>
+            </tr>
+          ) : (
+            clientes?.map(c => (
               <tr key={c.id}>
                 <td>{c.id}</td>
                 <td>{c.nome}</td>
@@ -75,18 +98,13 @@ const ListagemCliente: FC = () => {
                   <button
                     className="btn btn-sm btn-danger"
                     onClick={() => handleDelete(c.id)}
+                    disabled={deleteMutation.isPending && deleteMutation.variables === c.id}
                   >
-                    Excluir
+                    {deleteMutation.isPending && deleteMutation.variables === c.id ? 'Excluindo...' : 'Excluir'}
                   </button>
                 </td>
               </tr>
             ))
-          ) : (
-            <tr>
-              <td colSpan={7} className="text-center">
-                Carregando clientes…
-              </td>
-            </tr>
           )}
         </tbody>
       </table>

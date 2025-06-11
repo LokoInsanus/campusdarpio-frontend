@@ -1,38 +1,45 @@
-import { type FC, useEffect, useState } from 'react';
+import { type FC } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import campusService from '../../services/campusService';
+import { toast } from 'react-hot-toast';
+
+interface Campus {
+  id: number;
+  nome: string;
+  endereco: string;
+  quantidadeBlocos: number;
+}
 
 const ListagemCampus: FC = () => {
-  const [campi, setCampi] = useState<any[]>([]);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const fetchCampi = async () => {
-    try {
-      const list = await campusService.getCampi();
-      setCampi(list);
-    } catch (err) {
-      console.error('Erro ao buscar campi:', err);
-    }
-  };
+  const { data: campi, isLoading, isError, error } = useQuery<Campus[]>({
+    queryKey: ['campi'],
+    queryFn: campusService.getCampi,
+  });
 
-  useEffect(() => {
-    fetchCampi();
-  }, []);
+  const deleteMutation = useMutation({
+    mutationFn: campusService.deleteCampus,
+    onSuccess: () => {
+      toast.success('Campus excluído com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['campi'] });
+    },
+    onError: (err: any) => {
+      toast.error(`Erro ao excluir campus: ${err.message}`);
+    },
+  });
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = (id: number) => {
     const confirma = window.confirm('Deseja realmente excluir este campus?');
-    if (!confirma) return;
-
-    try {
-      await campusService.deleteCampus(id);
-      await fetchCampi();
-    } catch (err) {
-      console.error('Erro ao excluir campus:', err);
+    if (confirma) {
+      deleteMutation.mutate(id);
     }
   };
 
-  const handleEdit = (id: number) => {
-    navigate(`/cadastrar/campus/${id}`);
+  const handleEdit = (campusId: number) => {
+    navigate(`/cadastro/campus/edit/${campusId}`);
   };
 
   return (
@@ -54,8 +61,22 @@ const ListagemCampus: FC = () => {
           </tr>
         </thead>
         <tbody>
-          {campi.length > 0 ? (
-            campi.map(c => (
+          {isLoading ? (
+            <tr>
+              <td colSpan={5} className="text-center">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Carregando...</span>
+                </div>
+              </td>
+            </tr>
+          ) : isError ? (
+            <tr>
+              <td colSpan={5} className="text-center text-danger">
+                Erro ao carregar campi: {error.message}
+              </td>
+            </tr>
+          ) : (
+            campi?.map(c => (
               <tr key={c.id}>
                 <td>{c.id}</td>
                 <td>{c.nome}</td>
@@ -71,18 +92,13 @@ const ListagemCampus: FC = () => {
                   <button
                     className="btn btn-sm btn-danger"
                     onClick={() => handleDelete(c.id)}
+                    disabled={deleteMutation.isPending && deleteMutation.variables === c.id}
                   >
-                    Excluir
+                    {deleteMutation.isPending && deleteMutation.variables === c.id ? 'Excluindo...' : 'Excluir'}
                   </button>
                 </td>
               </tr>
             ))
-          ) : (
-            <tr>
-              <td colSpan={5} className="text-center">
-                Carregando campi…
-              </td>
-            </tr>
           )}
         </tbody>
       </table>

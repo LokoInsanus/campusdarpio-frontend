@@ -1,45 +1,53 @@
-import { type FC, useEffect, useState } from 'react';
+import { type FC } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import BlocoService from '../../services/blocoService';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import blocoService from '../../services/blocoService';
+import { toast } from 'react-hot-toast';
+
+interface Bloco {
+  id: number;
+  nome: string;
+  tipo: string;
+  capacidade: string;
+  descricao: string;
+}
 
 const ListagemBloco: FC = () => {
-  const [Blocos, setBlocos] = useState<any[]>([]);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const fetchBlocos = async () => {
-    try {
-      const list = await BlocoService.getBlocos();
-      setBlocos(list);
-    } catch (err) {
-      console.error('Erro ao buscar Blocos:', err);
-    }
-  };
+  const { data: blocos, isLoading, isError, error } = useQuery<Bloco[]>({
+    queryKey: ['blocos'],
+    queryFn: blocoService.getBlocos,
+  });
 
-  useEffect(() => {
-    fetchBlocos();
-  }, []);
+  const deleteMutation = useMutation({
+    mutationFn: blocoService.deleteBloco,
+    onSuccess: () => {
+      toast.success('Bloco excluído com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['blocos'] });
+    },
+    onError: (err: any) => {
+      toast.error(`Erro ao excluir bloco: ${err.message}`);
+    },
+  });
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = (id: number) => {
     const confirma = window.confirm('Deseja realmente excluir este Bloco?');
-    if (!confirma) return;
-
-    try {
-      await BlocoService.deleteBloco(id);
-      await fetchBlocos();
-    } catch (err) {
-      console.error('Erro ao excluir Bloco:', err);
+    if (confirma) {
+      deleteMutation.mutate(id);
     }
   };
 
-  const handleEdit = (id: number) => {
-    navigate(`/cadastrar/Bloco/${id}`);
+  const handleEdit = (blocoId: number) => {
+    navigate(`/cadastro/bloco/edit/${blocoId}`);
   };
 
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h1 className="mb-0">Blocos</h1>
-        <Link to="/cadastro/Bloco" className="btn btn-primary">
+        <Link to="/cadastro/bloco" className="btn btn-primary">
           Novo Bloco
         </Link>
       </div>
@@ -55,8 +63,22 @@ const ListagemBloco: FC = () => {
           </tr>
         </thead>
         <tbody>
-          {Blocos.length > 0 ? (
-            Blocos.map(c => (
+          {isLoading ? (
+            <tr>
+              <td colSpan={6} className="text-center">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Carregando...</span>
+                </div>
+              </td>
+            </tr>
+          ) : isError ? (
+            <tr>
+              <td colSpan={6} className="text-center text-danger">
+                Erro ao carregar blocos: {error.message}
+              </td>
+            </tr>
+          ) : (
+            blocos?.map(c => (
               <tr key={c.id}>
                 <td>{c.id}</td>
                 <td>{c.nome}</td>
@@ -73,18 +95,13 @@ const ListagemBloco: FC = () => {
                   <button
                     className="btn btn-sm btn-danger"
                     onClick={() => handleDelete(c.id)}
+                    disabled={deleteMutation.isPending && deleteMutation.variables === c.id}
                   >
-                    Excluir
+                    {deleteMutation.isPending && deleteMutation.variables === c.id ? 'Excluindo...' : 'Excluir'}
                   </button>
                 </td>
               </tr>
             ))
-          ) : (
-            <tr>
-              <td colSpan={6} className="text-center">
-                Carregando Blocos…
-              </td>
-            </tr>
           )}
         </tbody>
       </table>

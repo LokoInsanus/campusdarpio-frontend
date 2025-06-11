@@ -45,6 +45,14 @@ const App: FC = () => {
         <Route path="/cadastro/refeicao" element={<CadastroRefeicao />} />
         <Route path="/cadastro/bebida" element={<CadastroBebida />} />
 
+        <Route path="/cadastro/cliente/edit/:id" element={<CadastroCliente />} />
+        <Route path="/cadastro/funcionario/edit/:id" element={<CadastroFuncionario />} />
+        <Route path="/cadastro/entregador/edit/:id" element={<CadastroEntregador />} />
+        <Route path="/cadastro/bloco/edit/:id" element={<CadastroBloco />} />
+        <Route path="/cadastro/campus/edit/:id" element={<CadastroCampus />} />
+        <Route path="/cadastro/refeicao/edit/:id" element={<CadastroRefeicao />} />
+        <Route path="/cadastro/bebida/edit/:id" element={<CadastroBebida />} />
+
         <Route path="/listagem/cliente" element={<ListagemCliente />} />
         <Route path="/listagem/funcionario" element={<ListagemFuncionario />} />
         <Route path="/listagem/entregador" element={<ListagemEntregador />} />

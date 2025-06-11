@@ -1,38 +1,47 @@
-import { type FC, useEffect, useState } from 'react';
+import { type FC } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import entregadorService from '../../services/entregadorService';
+import { toast } from 'react-hot-toast';
+
+interface Entregador {
+  id: number;
+  nome: string;
+  cnh: string;
+  status: string;
+  telefone: string;
+  endereco: string;
+}
 
 const ListagemEntregador: FC = () => {
-  const [entregadores, setEntregadores] = useState<any[]>([]);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const fetchEntregadores = async () => {
-    try {
-      const list = await entregadorService.getEntregadores();
-      setEntregadores(list);
-    } catch (err) {
-      console.error('Erro ao buscar entregadores:', err);
-    }
-  };
+  const { data: entregadores, isLoading, isError, error } = useQuery<Entregador[]>({
+    queryKey: ['entregadores'],
+    queryFn: entregadorService.getEntregadores,
+  });
 
-  useEffect(() => {
-    fetchEntregadores();
-  }, []);
+  const deleteMutation = useMutation({
+    mutationFn: entregadorService.deleteEntregador,
+    onSuccess: () => {
+      toast.success('Entregador excluído com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['entregadores'] });
+    },
+    onError: (err: any) => {
+      toast.error(`Erro ao excluir entregador: ${err.message}`);
+    },
+  });
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = (id: number) => {
     const confirma = window.confirm('Deseja realmente excluir este entregador?');
-    if (!confirma) return;
-
-    try {
-      await entregadorService.deleteEntregador(id);
-      await fetchEntregadores();
-    } catch (err) {
-      console.error('Erro ao excluir entregador:', err);
+    if (confirma) {
+      deleteMutation.mutate(id);
     }
   };
 
-  const handleEdit = (id: number) => {
-    navigate(`/cadastrar/entregador/${id}`);
+  const handleEdit = (entregadorId: number) => {
+    navigate(`/cadastro/entregador/edit/${entregadorId}`);
   };
 
   return (
@@ -56,8 +65,22 @@ const ListagemEntregador: FC = () => {
           </tr>
         </thead>
         <tbody>
-          {entregadores.length > 0 ? (
-            entregadores.map(c => (
+          {isLoading ? (
+            <tr>
+              <td colSpan={7} className="text-center">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Carregando...</span>
+                </div>
+              </td>
+            </tr>
+          ) : isError ? (
+            <tr>
+              <td colSpan={7} className="text-center text-danger">
+                Erro ao carregar entregadores: {error.message}
+              </td>
+            </tr>
+          ) : (
+            entregadores?.map(c => (
               <tr key={c.id}>
                 <td>{c.id}</td>
                 <td>{c.nome}</td>
@@ -75,18 +98,13 @@ const ListagemEntregador: FC = () => {
                   <button
                     className="btn btn-sm btn-danger"
                     onClick={() => handleDelete(c.id)}
+                    disabled={deleteMutation.isPending && deleteMutation.variables === c.id}
                   >
-                    Excluir
+                    {deleteMutation.isPending && deleteMutation.variables === c.id ? 'Excluindo...' : 'Excluir'}
                   </button>
                 </td>
               </tr>
             ))
-          ) : (
-            <tr>
-              <td colSpan={7} className="text-center">
-                Carregando entregadores…
-              </td>
-            </tr>
           )}
         </tbody>
       </table>

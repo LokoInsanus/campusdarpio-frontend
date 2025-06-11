@@ -1,12 +1,172 @@
-import { type FC } from 'react';
+import { useState, type ChangeEvent, type FormEvent, type FC, useEffect } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useParams } from 'react-router-dom';
+import blocoService from '../../services/blocoService';
+import { toast } from 'react-hot-toast';
+
+interface Bloco {
+  id?: number;
+  nome: string;
+  tipo: string;
+  capacidade: string;
+  descricao: string;
+}
 
 const CadastroBloco: FC = () => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEditing = Boolean(id);
+
+  const [bloco, setBloco] = useState<Omit<Bloco, 'id'>>({
+    nome: '',
+    tipo: '',
+    capacidade: '',
+    descricao: ''
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof Bloco, string>>>({});
+  const queryClient = useQueryClient();
+
+  const { data: blocoToEdit, isLoading: isLoadingBloco } = useQuery({
+    queryKey: ['blocos', id],
+    queryFn: () => blocoService.getBlocoById(parseInt(id!)),
+    enabled: isEditing,
+  });
+
+  useEffect(() => {
+    if (blocoToEdit) {
+      setBloco({
+        nome: blocoToEdit.nome,
+        tipo: blocoToEdit.tipo,
+        capacidade: blocoToEdit.capacidade,
+        descricao: blocoToEdit.descricao
+      });
+    }
+  }, [blocoToEdit]);
+
+  const mutation = useMutation({
+    mutationFn: (updatedBloco: Omit<Bloco, 'id'>) => {
+      if (isEditing) {
+        return blocoService.updateBloco(parseInt(id!), updatedBloco);
+      } else {
+        return blocoService.createBloco(updatedBloco);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blocos'] });
+      toast.success(isEditing ? 'Bloco atualizado com sucesso!' : 'Bloco cadastrado com sucesso!');
+      navigate('/listagem/bloco');
+    },
+    onError: (error: any) => {
+      toast.error(`Erro: ${error.message}`);
+    }
+  });
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setBloco((prev) => ({ ...prev, [name]: value }));
+    if (errors[name as keyof Bloco]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: Partial<Record<keyof Bloco, string>> = {};
+    if (!bloco.nome.trim()) newErrors.nome = 'O nome é obrigatório';
+    if (!bloco.tipo.trim()) newErrors.tipo = 'O tipo é obrigatório';
+    if (!bloco.capacidade.trim()) newErrors.capacidade = 'A capacidade é obrigatória';
+    if (!bloco.descricao.trim()) newErrors.descricao = 'A descrição é obrigatória';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+    mutation.mutate(bloco);
+  };
+
+  if (isLoadingBloco) {
+    return (
+      <div className="container mt-5 text-center">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Carregando...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mt-5">
-      <h1>Bebida</h1>
-      <p>Esta página permite cadastrar blocos.</p>
+      <div className="row justify-content-center">
+        <div className="col-md-8">
+          <div className="card">
+            <div className="card-header text-bg-light">
+              <h2 className="mb-0">{isEditing ? 'Alterar Bloco' : 'Novo Bloco'}</h2>
+            </div>
+            <div className="card-body">
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label htmlFor="nome" className="form-label">Nome</label>
+                  <input
+                    type="text"
+                    className={`form-control ${errors.nome ? 'is-invalid' : ''}`}
+                    id="nome"
+                    name='nome'
+                    value={bloco.nome}
+                    onChange={handleChange} autoFocus
+                  />
+                  {errors.nome && <div className="invalid-feedback">{errors.nome}</div>}
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="tipo" className="form-label">Tipo</label>
+                  <input
+                    type="text"
+                    className={`form-control ${errors.tipo ? 'is-invalid' : ''}`}
+                    id="tipo"
+                    name='tipo'
+                    value={bloco.tipo}
+                    onChange={handleChange}
+                  />
+                  {errors.tipo && <div className="invalid-feedback">{errors.tipo}</div>}
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="capacidade" className="form-label">Capacidade</label>
+                  <input
+                    type="number"
+                    className={`form-control ${errors.capacidade ? 'is-invalid' : ''}`}
+                    id="capacidade"
+                    name='capacidade'
+                    value={bloco.capacidade}
+                    onChange={handleChange}
+                  />
+                  {errors.capacidade && <div className="invalid-feedback">{errors.capacidade}</div>}
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="descricao" className="form-label">Descrição</label>
+                  <textarea
+                    className={`form-control ${errors.descricao ? 'is-invalid' : ''}`}
+                    id="descricao"
+                    name='descricao'
+                    value={bloco.descricao}
+                    onChange={handleChange}
+                  />
+                  {errors.descricao && <div className="invalid-feedback">{errors.descricao}</div>}
+                </div>
+                <div className="d-flex">
+                  <button type="submit" className="btn btn-success me-2" disabled={mutation.isPending}>
+                    {mutation.isPending ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Salvar Bloco')}
+                  </button>
+                  <button type="button" className="btn btn-secondary" onClick={() => navigate('/listagem/bloco')}>
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
-}
+};
 
 export default CadastroBloco;

@@ -1,38 +1,46 @@
-import { type FC, useEffect, useState } from 'react';
+import { type FC } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import bebidaService from '../../services/bebidaService';
+import { toast } from 'react-hot-toast';
+
+interface Bebida {
+  id: number;
+  nome: string;
+  tipo: string;
+  preco: string;
+  quantidade: string;
+}
 
 const ListagemBebida: FC = () => {
-  const [bebidas, setBebidas] = useState<any[]>([]);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const fetchBebidas = async () => {
-    try {
-      const list = await bebidaService.getBebidas();
-      setBebidas(list);
-    } catch (err) {
-      console.error('Erro ao buscar bebidas:', err);
+  const { data: bebidas, isLoading, isError, error } = useQuery<Bebida[]>({
+    queryKey: ['bebidas'],
+    queryFn: bebidaService.getBebidas,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: bebidaService.deleteBebida,
+    onSuccess: () => {
+      toast.success('Bebida excluída com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['bebidas'] });
+    },
+    onError: (err: any) => {
+      toast.error(`Erro ao excluir bebida: ${err.message}`);
+    },
+  });
+
+  const handleDelete = (id: number) => {
+    const confirma = window.confirm('Deseja realmente excluir esta bebida?');
+    if (confirma) {
+      deleteMutation.mutate(id);
     }
   };
 
-  useEffect(() => {
-    fetchBebidas();
-  }, []);
-
-  const handleDelete = async (id: number) => {
-    const confirma = window.confirm('Deseja realmente excluir este bebida?');
-    if (!confirma) return;
-
-    try {
-      await bebidaService.deleteBebida(id);
-      await fetchBebidas();
-    } catch (err) {
-      console.error('Erro ao excluir bebida:', err);
-    }
-  };
-
-  const handleEdit = (id: number) => {
-    navigate(`/cadastrar/bebida/${id}`);
+  const handleEdit = (bebidaId: number) => {
+    navigate(`/cadastro/bebida/edit/${bebidaId}`);
   };
 
   return (
@@ -40,7 +48,7 @@ const ListagemBebida: FC = () => {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h1 className="mb-0">Bebidas</h1>
         <Link to="/cadastro/bebida" className="btn btn-primary">
-          Novo Bebida
+          Nova Bebida
         </Link>
       </div>
       <table className="table table-striped align-items-center text-center">
@@ -55,8 +63,22 @@ const ListagemBebida: FC = () => {
           </tr>
         </thead>
         <tbody>
-          {bebidas.length > 0 ? (
-            bebidas.map(c => (
+          {isLoading ? (
+            <tr>
+              <td colSpan={6} className="text-center">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Carregando...</span>
+                </div>
+              </td>
+            </tr>
+          ) : isError ? (
+            <tr>
+              <td colSpan={6} className="text-center text-danger">
+                Erro ao carregar bebidas: {error.message}
+              </td>
+            </tr>
+          ) : (
+            bebidas?.map(c => (
               <tr key={c.id}>
                 <td>{c.id}</td>
                 <td>{c.nome}</td>
@@ -73,18 +95,13 @@ const ListagemBebida: FC = () => {
                   <button
                     className="btn btn-sm btn-danger"
                     onClick={() => handleDelete(c.id)}
+                    disabled={deleteMutation.isPending && deleteMutation.variables === c.id}
                   >
-                    Excluir
+                    {deleteMutation.isPending && deleteMutation.variables === c.id ? 'Excluindo...' : 'Excluir'}
                   </button>
                 </td>
               </tr>
             ))
-          ) : (
-            <tr>
-              <td colSpan={6} className="text-center">
-                Carregando bebidas…
-              </td>
-            </tr>
           )}
         </tbody>
       </table>
