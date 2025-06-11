@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import funcionarioService from '../../services/funcionarioService';
 import { toast } from 'react-hot-toast';
+import { maskCPF, maskPhone } from '../../utils/masks';
 
 interface Funcionario {
   id?: number;
@@ -38,9 +39,9 @@ const CadastroFuncionario: FC = () => {
     if (funcionarioToEdit) {
       setFuncionario({
         nome: funcionarioToEdit.nome,
-        cpf: funcionarioToEdit.cpf,
+        cpf: maskCPF(funcionarioToEdit.cpf),
         cargo: funcionarioToEdit.cargo,
-        telefone: funcionarioToEdit.telefone,
+        telefone: maskPhone(funcionarioToEdit.telefone),
         endereco: funcionarioToEdit.endereco
       });
     }
@@ -48,10 +49,15 @@ const CadastroFuncionario: FC = () => {
 
   const mutation = useMutation({
     mutationFn: (updatedFuncionario: Omit<Funcionario, 'id'>) => {
+      const payload = {
+        ...updatedFuncionario,
+        cpf: updatedFuncionario.cpf.replace(/\D/g, ''),
+        telefone: updatedFuncionario.telefone.replace(/\D/g, ''),
+      };
       if (isEditing) {
-        return funcionarioService.updateFuncionario(parseInt(id!), updatedFuncionario);
+        return funcionarioService.updateFuncionario(parseInt(id!), payload);
       } else {
-        return funcionarioService.createFuncionario(updatedFuncionario);
+        return funcionarioService.createFuncionario(payload);
       }
     },
     onSuccess: () => {
@@ -66,7 +72,14 @@ const CadastroFuncionario: FC = () => {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFuncionario((prev) => ({ ...prev, [name]: value }));
+    let maskedValue = value;
+    if (name === 'cpf') {
+      maskedValue = maskCPF(value);
+    } else if (name === 'telefone') {
+      maskedValue = maskPhone(value);
+    }
+
+    setFuncionario((prev) => ({ ...prev, [name]: maskedValue }));
     if (errors[name as keyof Funcionario]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -129,6 +142,7 @@ const CadastroFuncionario: FC = () => {
                     className={`form-control ${errors.cpf ? 'is-invalid' : ''}`}
                     id="cpf"
                     name="cpf"
+                    maxLength={14}
                     value={funcionario.cpf}
                     onChange={handleChange}
                   />
@@ -153,6 +167,7 @@ const CadastroFuncionario: FC = () => {
                     className={`form-control ${errors.telefone ? 'is-invalid' : ''}`}
                     id="telefone"
                     name="telefone"
+                    maxLength={15}
                     value={funcionario.telefone}
                     onChange={handleChange}
                   />

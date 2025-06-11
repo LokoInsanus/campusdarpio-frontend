@@ -3,12 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import refeicaoService from '../../services/refeicaoService';
 import { toast } from 'react-hot-toast';
-
-const formatCurrency = (value: string) => {
-  if (!value) return '';
-  const amount = Number(value.replace(/\D/g, '')) / 100;
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount);
-};
+import { maskCurrency } from '../../utils/masks';
 
 interface Refeicao {
   id?: number;
@@ -46,7 +41,7 @@ const CadastroRefeicao: FC = () => {
         nome: refeicaoToEdit.nome,
         descricao: refeicaoToEdit.descricao,
         tipo: refeicaoToEdit.tipo,
-        preco: String(Number(refeicaoToEdit.preco) * 100),
+        preco: maskCurrency(String(Number(refeicaoToEdit.preco) * 100)),
         quantidade: refeicaoToEdit.quantidade
       });
     }
@@ -56,7 +51,7 @@ const CadastroRefeicao: FC = () => {
     mutationFn: (formData: Omit<Refeicao, 'id'>) => {
       const payload = {
         ...formData,
-        preco: (Number(formData.preco) / 100).toFixed(2),
+        preco: formData.preco.replace(/\D/g, ''),
       };
       if (isEditing) {
         return refeicaoService.updateRefeicao(parseInt(id!), payload);
@@ -76,11 +71,11 @@ const CadastroRefeicao: FC = () => {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    let maskedValue = value;
     if (name === 'preco') {
-      setRefeicao((prev) => ({ ...prev, preco: value.replace(/\D/g, '') }));
-    } else {
-      setRefeicao((prev) => ({ ...prev, [name]: value }));
+      maskedValue = maskCurrency(value);
     }
+    setRefeicao((prev) => ({ ...prev, [name]: maskedValue }));
 
     if (errors[name as keyof Refeicao]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
@@ -92,7 +87,7 @@ const CadastroRefeicao: FC = () => {
     if (!refeicao.nome.trim()) newErrors.nome = 'O nome é obrigatório';
     if (!refeicao.descricao.trim()) newErrors.descricao = 'A descrição é obrigatória';
     if (!refeicao.tipo.trim()) newErrors.tipo = 'O tipo é obrigatório';
-    if (!refeicao.preco.trim() || Number(refeicao.preco) === 0) newErrors.preco = 'O preço é obrigatório';
+    if (!refeicao.preco.trim() || Number(refeicao.preco.replace(/\D/g, '')) === 0) newErrors.preco = 'O preço é obrigatório';
     if (!refeicao.quantidade.trim()) newErrors.quantidade = 'A quantidade é obrigatória';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -167,7 +162,7 @@ const CadastroRefeicao: FC = () => {
                     className={`form-control ${errors.preco ? 'is-invalid' : ''}`}
                     id="preco"
                     name='preco'
-                    value={formatCurrency(refeicao.preco)}
+                    value={refeicao.preco}
                     onChange={handleChange}
                     placeholder="R$ 0,00"
                   />

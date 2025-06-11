@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import entregadorService from '../../services/entregadorService';
 import { toast } from 'react-hot-toast';
+import { maskCNH, maskPhone } from '../../utils/masks';
 
 // Interface para os dados do formulário (sem status)
 interface EntregadorForm {
@@ -36,8 +37,8 @@ const CadastroEntregador: FC = () => {
     if (entregadorToEdit) {
       setEntregador({
         nome: entregadorToEdit.nome,
-        cnh: entregadorToEdit.cnh,
-        telefone: entregadorToEdit.telefone,
+        cnh: maskCNH(entregadorToEdit.cnh),
+        telefone: maskPhone(entregadorToEdit.telefone),
         endereco: entregadorToEdit.endereco,
       });
     }
@@ -45,10 +46,15 @@ const CadastroEntregador: FC = () => {
 
   const mutation = useMutation({
     mutationFn: (formData: EntregadorForm) => {
+      const payload = {
+        ...formData,
+        cnh: formData.cnh.replace(/\D/g, ''),
+        telefone: formData.telefone.replace(/\D/g, ''),
+        status: 'disponível'
+      };
       if (isEditing) {
-        return entregadorService.updateEntregador(parseInt(id!), formData);
+        return entregadorService.updateEntregador(parseInt(id!), payload);
       } else {
-        const payload = { ...formData, status: 'disponível' };
         return entregadorService.createEntregador(payload);
       }
     },
@@ -64,7 +70,14 @@ const CadastroEntregador: FC = () => {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setEntregador((prev) => ({ ...prev, [name]: value }));
+    let maskedValue = value;
+    if (name === 'cnh') {
+      maskedValue = maskCNH(value);
+    } else if (name === 'telefone') {
+      maskedValue = maskPhone(value);
+    }
+
+    setEntregador((prev) => ({ ...prev, [name]: maskedValue }));
     if (errors[name as keyof EntregadorForm]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -125,6 +138,7 @@ const CadastroEntregador: FC = () => {
                     className={`form-control ${errors.cnh ? 'is-invalid' : ''}`}
                     id="cnh"
                     name='cnh'
+                    maxLength={11}
                     value={entregador.cnh}
                     onChange={handleChange}
                   />
@@ -137,6 +151,7 @@ const CadastroEntregador: FC = () => {
                     className={`form-control ${errors.telefone ? 'is-invalid' : ''}`}
                     id="telefone"
                     name='telefone'
+                    maxLength={15}
                     value={entregador.telefone}
                     onChange={handleChange}
                   />

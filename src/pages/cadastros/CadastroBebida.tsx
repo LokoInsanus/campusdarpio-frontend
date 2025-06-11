@@ -3,12 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import bebidaService from '../../services/bebidaService';
 import { toast } from 'react-hot-toast';
-
-const formatCurrency = (value: string) => {
-  if (!value) return '';
-  const amount = Number(value.replace(/\D/g, '')) / 100;
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount);
-};
+import { maskCurrency } from '../../utils/masks';
 
 interface Bebida {
   id?: number;
@@ -43,7 +38,7 @@ const CadastroBebida: FC = () => {
       setBebida({
         nome: bebidaToEdit.nome,
         tipo: bebidaToEdit.tipo,
-        preco: String(Number(bebidaToEdit.preco) * 100),
+        preco: maskCurrency(String(Number(bebidaToEdit.preco) * 100)),
         quantidade: bebidaToEdit.quantidade,
       });
     }
@@ -53,7 +48,7 @@ const CadastroBebida: FC = () => {
     mutationFn: (formData: Omit<Bebida, 'id'>) => {
       const payload = {
         ...formData,
-        preco: (Number(formData.preco) / 100).toFixed(2),
+        preco: formData.preco.replace(/\D/g, ''),
       };
       if (isEditing) {
         return bebidaService.updateBebida(parseInt(id!), payload);
@@ -73,11 +68,11 @@ const CadastroBebida: FC = () => {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    let maskedValue = value;
     if (name === 'preco') {
-      setBebida((prev) => ({ ...prev, preco: value.replace(/\D/g, '') }));
-    } else {
-      setBebida((prev) => ({ ...prev, [name]: value }));
+      maskedValue = maskCurrency(value);
     }
+    setBebida((prev) => ({ ...prev, [name]: maskedValue }));
 
     if (errors[name as keyof Bebida]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
@@ -88,7 +83,7 @@ const CadastroBebida: FC = () => {
     const newErrors: Partial<Bebida> = {};
     if (!bebida.nome.trim()) newErrors.nome = 'O nome é obrigatório';
     if (!bebida.tipo.trim()) newErrors.tipo = 'O tipo é obrigatório';
-    if (!bebida.preco.trim() || Number(bebida.preco) === 0) newErrors.preco = 'O preço é obrigatório';
+    if (!bebida.preco.trim() || Number(bebida.preco.replace(/\D/g, '')) === 0) newErrors.preco = 'O preço é obrigatório';
     if (!bebida.quantidade.trim()) newErrors.quantidade = 'A quantidade é obrigatória';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -151,7 +146,7 @@ const CadastroBebida: FC = () => {
                     className={`form-control ${errors.preco ? 'is-invalid' : ''}`}
                     id="preco"
                     name='preco'
-                    value={formatCurrency(bebida.preco)}
+                    value={bebida.preco}
                     onChange={handleChange}
                     placeholder="R$ 0,00"
                   />

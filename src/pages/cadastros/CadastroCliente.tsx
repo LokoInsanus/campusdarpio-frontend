@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import clienteService from '../../services/clienteService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { maskCPF, maskPhone } from '../../utils/masks';
 
 interface ClientForm {
   nome: string;
@@ -35,8 +36,8 @@ const CadastroCliente: FC = () => {
     if (clientToEdit) {
       setClient({
         nome: clientToEdit.nome,
-        cpf: clientToEdit.cpf,
-        telefone: clientToEdit.telefone,
+        cpf: maskCPF(clientToEdit.cpf),
+        telefone: maskPhone(clientToEdit.telefone),
         endereco: clientToEdit.endereco
       });
     }
@@ -44,10 +45,15 @@ const CadastroCliente: FC = () => {
 
   const mutation = useMutation({
     mutationFn: (formData: ClientForm) => {
+      const payload = {
+        ...formData,
+        cpf: formData.cpf.replace(/\D/g, ''),
+        telefone: formData.telefone.replace(/\D/g, ''),
+        status: 'disponível'
+      };
       if (isEditing) {
-        return clienteService.updateCliente(parseInt(id!), formData);
+        return clienteService.updateCliente(parseInt(id!), payload);
       } else {
-        const payload = { ...formData, status: 'disponível' };
         return clienteService.createCliente(payload);
       }
     },
@@ -63,7 +69,13 @@ const CadastroCliente: FC = () => {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setClient(prev => ({ ...prev, [name]: value }));
+    let maskedValue = value;
+    if (name === 'cpf') {
+      maskedValue = maskCPF(value);
+    } else if (name === 'telefone') {
+      maskedValue = maskPhone(value);
+    }
+    setClient(prev => ({ ...prev, [name]: maskedValue }));
     if (errors[name as keyof ClientForm]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -124,6 +136,7 @@ const CadastroCliente: FC = () => {
                     className={`form-control ${errors.cpf ? 'is-invalid' : ''}`}
                     id="cpf"
                     name="cpf"
+                    maxLength={14}
                     value={client.cpf}
                     onChange={handleChange}
                   />
@@ -136,6 +149,7 @@ const CadastroCliente: FC = () => {
                     className={`form-control ${errors.telefone ? 'is-invalid' : ''}`}
                     id="telefone"
                     name="telefone"
+                    maxLength={15}
                     value={client.telefone}
                     onChange={handleChange}
                   />
