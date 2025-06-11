@@ -1,7 +1,8 @@
-import { type FC } from 'react';
+import { type FC, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import blocoService from '../../services/blocoService';
+import campusService from '../../services/campusService';
 import { toast } from 'react-hot-toast';
 
 interface Bloco {
@@ -10,16 +11,34 @@ interface Bloco {
   tipo: string;
   capacidade: string;
   descricao: string;
+  campusId: number;
 }
+
+interface Campus {
+  id: number;
+  nome: string;
+}
+
 
 const ListagemBloco: FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: blocos, isLoading, isError, error } = useQuery<Bloco[]>({
+  const { data: blocos, isLoading: isLoadingBlocos, isError, error } = useQuery<Bloco[]>({
     queryKey: ['blocos'],
     queryFn: blocoService.getBlocos,
   });
+
+  const { data: campi, isLoading: isLoadingCampi } = useQuery<Campus[]>({
+    queryKey: ['campi'],
+    queryFn: campusService.getCampi,
+  });
+
+  const campusMap = useMemo(() => {
+    if (!campi) return new Map();
+    return new Map(campi.map(c => [c.id, c.nome]));
+  }, [campi]);
+
 
   const deleteMutation = useMutation({
     mutationFn: blocoService.deleteBloco,
@@ -43,6 +62,8 @@ const ListagemBloco: FC = () => {
     navigate(`/cadastro/bloco/edit/${blocoId}`);
   };
 
+  const isLoading = isLoadingBlocos || isLoadingCampi;
+
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -59,13 +80,14 @@ const ListagemBloco: FC = () => {
             <th>Tipo</th>
             <th>Capacidade</th>
             <th>Descrição</th>
+            <th>Campus</th>
             <th>Ações</th>
           </tr>
         </thead>
         <tbody>
           {isLoading ? (
             <tr>
-              <td colSpan={6} className="text-center">
+              <td colSpan={7} className="text-center">
                 <div className="spinner-border text-primary" role="status">
                   <span className="visually-hidden">Carregando...</span>
                 </div>
@@ -73,7 +95,7 @@ const ListagemBloco: FC = () => {
             </tr>
           ) : isError ? (
             <tr>
-              <td colSpan={6} className="text-center text-danger">
+              <td colSpan={7} className="text-center text-danger">
                 Erro ao carregar blocos: {error.message}
               </td>
             </tr>
@@ -85,6 +107,7 @@ const ListagemBloco: FC = () => {
                 <td>{c.tipo}</td>
                 <td>{c.capacidade}</td>
                 <td>{c.descricao}</td>
+                <td>{campusMap.get(c.campusId) || '...'}</td>
                 <td>
                   <button
                     className="btn btn-sm btn-warning me-2"

@@ -2,7 +2,13 @@ import { useState, type ChangeEvent, type FormEvent, type FC, useEffect } from '
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import blocoService from '../../services/blocoService';
+import campusService from '../../services/campusService';
 import { toast } from 'react-hot-toast';
+
+interface Campus {
+  id: number;
+  nome: string;
+}
 
 interface Bloco {
   id?: number;
@@ -10,6 +16,7 @@ interface Bloco {
   tipo: string;
   capacidade: string;
   descricao: string;
+  campusId: number | '';
 }
 
 const CadastroBloco: FC = () => {
@@ -21,10 +28,16 @@ const CadastroBloco: FC = () => {
     nome: '',
     tipo: '',
     capacidade: '',
-    descricao: ''
+    descricao: '',
+    campusId: ''
   });
   const [errors, setErrors] = useState<Partial<Record<keyof Bloco, string>>>({});
   const queryClient = useQueryClient();
+
+  const { data: campi, isLoading: isLoadingCampi } = useQuery<Campus[]>({
+    queryKey: ['campi'],
+    queryFn: campusService.getCampi,
+  });
 
   const { data: blocoToEdit, isLoading: isLoadingBloco } = useQuery({
     queryKey: ['blocos', id],
@@ -38,17 +51,19 @@ const CadastroBloco: FC = () => {
         nome: blocoToEdit.nome,
         tipo: blocoToEdit.tipo,
         capacidade: blocoToEdit.capacidade,
-        descricao: blocoToEdit.descricao
+        descricao: blocoToEdit.descricao,
+        campusId: blocoToEdit.campusId
       });
     }
   }, [blocoToEdit]);
 
   const mutation = useMutation({
     mutationFn: (updatedBloco: Omit<Bloco, 'id'>) => {
+      const payload = { ...updatedBloco, campusId: Number(updatedBloco.campusId) };
       if (isEditing) {
-        return blocoService.updateBloco(parseInt(id!), updatedBloco);
+        return blocoService.updateBloco(parseInt(id!), payload);
       } else {
-        return blocoService.createBloco(updatedBloco);
+        return blocoService.createBloco(payload);
       }
     },
     onSuccess: () => {
@@ -61,9 +76,12 @@ const CadastroBloco: FC = () => {
     }
   });
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setBloco((prev) => ({ ...prev, [name]: value }));
+    setBloco((prev) => ({
+      ...prev,
+      [name]: name === 'campusId' ? (value === '' ? '' : Number(value)) : value
+    }));
     if (errors[name as keyof Bloco]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -75,6 +93,7 @@ const CadastroBloco: FC = () => {
     if (!bloco.tipo.trim()) newErrors.tipo = 'O tipo é obrigatório';
     if (!bloco.capacidade.trim()) newErrors.capacidade = 'A capacidade é obrigatória';
     if (!bloco.descricao.trim()) newErrors.descricao = 'A descrição é obrigatória';
+    if (!bloco.campusId) newErrors.campusId = 'A seleção do campus é obrigatória';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -85,7 +104,7 @@ const CadastroBloco: FC = () => {
     mutation.mutate(bloco);
   };
 
-  if (isLoadingBloco) {
+  if (isLoadingBloco || isLoadingCampi) {
     return (
       <div className="container mt-5 text-center">
         <div className="spinner-border text-primary" role="status">
@@ -151,6 +170,24 @@ const CadastroBloco: FC = () => {
                     onChange={handleChange}
                   />
                   {errors.descricao && <div className="invalid-feedback">{errors.descricao}</div>}
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="campusId" className="form-label">Campus</label>
+                  <select
+                    id="campusId"
+                    name="campusId"
+                    className={`form-select ${errors.campusId ? 'is-invalid' : ''}`}
+                    value={bloco.campusId}
+                    onChange={handleChange}
+                  >
+                    <option value="">Selecione um campus</option>
+                    {campi?.map(campus => (
+                      <option key={campus.id} value={campus.id}>
+                        {campus.nome}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.campusId && <div className="invalid-feedback">{errors.campusId}</div>}
                 </div>
                 <div className="d-flex">
                   <button type="submit" className="btn btn-success me-2" disabled={mutation.isPending}>
