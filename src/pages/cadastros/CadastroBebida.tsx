@@ -5,12 +5,11 @@ import bebidaService from '../../services/bebidaService';
 import { toast } from 'react-hot-toast';
 import { maskCurrency } from '../../utils/masks';
 
-interface Bebida {
-  id?: number;
+// Interface do formulário, sem o campo quantidade
+interface BebidaForm {
   nome: string;
   tipo: string;
   preco: string;
-  quantidade: string;
 }
 
 const CadastroBebida: FC = () => {
@@ -18,13 +17,13 @@ const CadastroBebida: FC = () => {
   const { id } = useParams<{ id: string }>();
   const isEditing = Boolean(id);
 
-  const [bebida, setBebida] = useState<Omit<Bebida, 'id'>>({
+  const [bebida, setBebida] = useState<BebidaForm>({
     nome: '',
     tipo: '',
     preco: '',
-    quantidade: ''
   });
-  const [errors, setErrors] = useState<Partial<Bebida>>({});
+
+  const [errors, setErrors] = useState<Partial<BebidaForm>>({});
   const queryClient = useQueryClient();
 
   const { data: bebidaToEdit, isLoading: isLoadingBebida } = useQuery({
@@ -39,18 +38,23 @@ const CadastroBebida: FC = () => {
         nome: bebidaToEdit.nome,
         tipo: bebidaToEdit.tipo,
         preco: maskCurrency(String(Number(bebidaToEdit.preco) * 100)),
-        quantidade: bebidaToEdit.quantidade,
       });
     }
   }, [bebidaToEdit]);
 
   const mutation = useMutation({
-    mutationFn: (formData: Omit<Bebida, 'id'>) => {
+    mutationFn: (formData: BebidaForm) => {
+      // Monta o payload final, incluindo quantidade: 0
       const payload = {
-        ...formData,
-        preco: formData.preco.replace(/\D/g, ''),
+        nome: formData.nome,
+        tipo: formData.tipo,
+        preco: Number(formData.preco.replace(/\D/g, '')) / 100,
+        quantidade: 0, // Valor fixo enviado para a API
       };
+
       if (isEditing) {
+        // Na edição, o backend pode ou não precisar da quantidade. 
+        // Se precisar, está correto. Se não, pode ser removido daqui.
         return bebidaService.updateBebida(parseInt(id!), payload);
       } else {
         return bebidaService.createBebida(payload);
@@ -62,37 +66,36 @@ const CadastroBebida: FC = () => {
       navigate('/listagem/bebida');
     },
     onError: (error: any) => {
-      toast.error(`Erro: ${error.message}`);
+      const apiError = error.response?.data?.message || error.message;
+      toast.error(`Erro ao salvar: ${apiError}`);
     }
   });
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    let maskedValue = value;
-    if (name === 'preco') {
-      maskedValue = maskCurrency(value);
-    }
-    setBebida((prev) => ({ ...prev, [name]: maskedValue }));
-
-    if (errors[name as keyof Bebida]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
+    setBebida((prev) => ({
+      ...prev,
+      [name]: name === 'preco' ? maskCurrency(value) : value,
+    }));
+    if (errors[name as keyof BebidaForm]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
   };
 
   const validateForm = () => {
-    const newErrors: Partial<Bebida> = {};
+    const newErrors: Partial<BebidaForm> = {};
     if (!bebida.nome.trim()) newErrors.nome = 'O nome é obrigatório';
     if (!bebida.tipo.trim()) newErrors.tipo = 'O tipo é obrigatório';
     if (!bebida.preco.trim() || Number(bebida.preco.replace(/\D/g, '')) === 0) newErrors.preco = 'O preço é obrigatório';
-    if (!bebida.quantidade.trim()) newErrors.quantidade = 'A quantidade é obrigatória';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!validateForm()) return;
-    mutation.mutate(bebida);
+    if (validateForm()) {
+      mutation.mutate(bebida);
+    }
   };
 
   if (isLoadingBebida) {
@@ -152,18 +155,9 @@ const CadastroBebida: FC = () => {
                   />
                   {errors.preco && <div className="invalid-feedback">{errors.preco}</div>}
                 </div>
-                <div className="mb-3">
-                  <label htmlFor="quantidade" className="form-label">Quantidade</label>
-                  <input
-                    type="number"
-                    className={`form-control ${errors.quantidade ? 'is-invalid' : ''}`}
-                    id="quantidade"
-                    name='quantidade'
-                    value={bebida.quantidade}
-                    onChange={handleChange}
-                  />
-                  {errors.quantidade && <div className="invalid-feedback">{errors.quantidade}</div>}
-                </div>
+
+                {/* O CAMPO QUANTIDADE FOI REMOVIDO DO FORMULÁRIO */}
+
                 <div className="d-flex">
                   <button type="submit" className="btn btn-success me-2" disabled={mutation.isPending}>
                     {mutation.isPending ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Salvar Bebida')}

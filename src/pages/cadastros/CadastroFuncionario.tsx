@@ -53,6 +53,7 @@ const CadastroFuncionario: FC = () => {
         ...updatedFuncionario,
         cpf: updatedFuncionario.cpf.replace(/\D/g, ''),
         telefone: updatedFuncionario.telefone.replace(/\D/g, ''),
+        data_de_emissao: new Date().toISOString(),
       };
       if (isEditing) {
         return funcionarioService.updateFuncionario(parseInt(id!), payload);

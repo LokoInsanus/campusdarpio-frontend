@@ -41,11 +41,16 @@ const CadastroCampus: FC = () => {
   }, [campusToEdit]);
 
   const mutation = useMutation({
-    mutationFn: (updatedCampus: Campus) => {
-      const payload = { ...updatedCampus, quantidadeBlocos: Number(updatedCampus.quantidadeBlocos) };
+    mutationFn: (campusData: Campus) => {
       if (isEditing) {
+        const payload = { ...campusData, quantidadeBlocos: Number(campusData.quantidadeBlocos) };
         return campusService.updateCampus(parseInt(id!), payload);
       } else {
+        const payload = {
+          ...campusData,
+          quantidadeBlocos: Number(campusData.quantidadeBlocos),
+          status: true
+        };
         return campusService.createCampus(payload);
       }
     },

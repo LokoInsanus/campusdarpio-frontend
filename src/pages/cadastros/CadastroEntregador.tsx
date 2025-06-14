@@ -3,12 +3,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import entregadorService from '../../services/entregadorService';
 import { toast } from 'react-hot-toast';
-import { maskCNH, maskPhone } from '../../utils/masks';
+import { maskCNH, maskPhone, maskCPF } from '../../utils/masks';
 
-// Interface para os dados do formulário (sem status)
 interface EntregadorForm {
   nome: string;
   cnh: string;
+  cpf: string;
+  veiculo: string;
   telefone: string;
   endereco: string;
 }
@@ -21,6 +22,8 @@ const CadastroEntregador: FC = () => {
   const [entregador, setEntregador] = useState<EntregadorForm>({
     nome: '',
     cnh: '',
+    cpf: '',
+    veiculo: '',
     telefone: '',
     endereco: ''
   });
@@ -38,6 +41,10 @@ const CadastroEntregador: FC = () => {
       setEntregador({
         nome: entregadorToEdit.nome,
         cnh: maskCNH(entregadorToEdit.cnh),
+        // @ts-ignore
+        cpf: maskCPF(entregadorToEdit.cpf || ''),
+        // @ts-ignore
+        veiculo: entregadorToEdit.veiculo || '',
         telefone: maskPhone(entregadorToEdit.telefone),
         endereco: entregadorToEdit.endereco,
       });
@@ -49,8 +56,9 @@ const CadastroEntregador: FC = () => {
       const payload = {
         ...formData,
         cnh: formData.cnh.replace(/\D/g, ''),
+        cpf: formData.cpf.replace(/\D/g, ''),
         telefone: formData.telefone.replace(/\D/g, ''),
-        status: 'disponível'
+        status: 'ativo'
       };
       if (isEditing) {
         return entregadorService.updateEntregador(parseInt(id!), payload);
@@ -75,6 +83,8 @@ const CadastroEntregador: FC = () => {
       maskedValue = maskCNH(value);
     } else if (name === 'telefone') {
       maskedValue = maskPhone(value);
+    } else if (name === 'cpf') {
+      maskedValue = maskCPF(value);
     }
 
     setEntregador((prev) => ({ ...prev, [name]: maskedValue }));
@@ -87,6 +97,8 @@ const CadastroEntregador: FC = () => {
     const newErrors: Partial<EntregadorForm> = {};
     if (!entregador.nome.trim()) newErrors.nome = 'O nome é obrigatório';
     if (!entregador.cnh.trim()) newErrors.cnh = 'A CNH é obrigatória';
+    if (!entregador.cpf.trim()) newErrors.cpf = 'O CPF é obrigatório';
+    if (!entregador.veiculo.trim()) newErrors.veiculo = 'O veículo é obrigatório';
     if (!entregador.telefone.trim()) newErrors.telefone = 'O telefone é obrigatório';
     if (!entregador.endereco.trim()) newErrors.endereco = 'O endereço é obrigatório';
     setErrors(newErrors);
@@ -132,6 +144,19 @@ const CadastroEntregador: FC = () => {
                   {errors.nome && <div className="invalid-feedback">{errors.nome}</div>}
                 </div>
                 <div className="mb-3">
+                  <label htmlFor="cpf" className="form-label">CPF</label>
+                  <input
+                    type="text"
+                    className={`form-control ${errors.cpf ? 'is-invalid' : ''}`}
+                    id="cpf"
+                    name='cpf'
+                    maxLength={14}
+                    value={entregador.cpf}
+                    onChange={handleChange}
+                  />
+                  {errors.cpf && <div className="invalid-feedback">{errors.cpf}</div>}
+                </div>
+                <div className="mb-3">
                   <label htmlFor="cnh" className="form-label">CNH</label>
                   <input
                     type="text"
@@ -143,6 +168,19 @@ const CadastroEntregador: FC = () => {
                     onChange={handleChange}
                   />
                   {errors.cnh && <div className="invalid-feedback">{errors.cnh}</div>}
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="veiculo" className="form-label">Veículo</label>
+                  <input
+                    type="text"
+                    className={`form-control ${errors.veiculo ? 'is-invalid' : ''}`}
+                    id="veiculo"
+                    name='veiculo'
+                    value={entregador.veiculo}
+                    onChange={handleChange}
+                    placeholder="Ex: Moto Honda CG 160"
+                  />
+                  {errors.veiculo && <div className="invalid-feedback">{errors.veiculo}</div>}
                 </div>
                 <div className="mb-3">
                   <label htmlFor="telefone" className="form-label">Telefone</label>

@@ -16,7 +16,6 @@ export const maskCNH = (value: string): string => {
   return value;
 };
 
-
 export const maskPhone = (value: string): string => {
   value = value.replace(/\D/g, '');
   value = value.replace(/^(\d{2})(\d)/, '($1) $2');

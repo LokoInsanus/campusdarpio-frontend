@@ -14,7 +14,7 @@ interface Bloco {
   id?: number;
   nome: string;
   tipo: string;
-  capacidade: string;
+  capacidade: number | '';
   descricao: string;
   campusId: number | '';
 }
@@ -59,7 +59,14 @@ const CadastroBloco: FC = () => {
 
   const mutation = useMutation({
     mutationFn: (updatedBloco: Omit<Bloco, 'id'>) => {
-      const payload = { ...updatedBloco, campusId: Number(updatedBloco.campusId) };
+      const payload = {
+        nome: updatedBloco.nome,
+        tipo: Number(updatedBloco.tipo),
+        capacidade: Number(updatedBloco.capacidade),
+        descricao: updatedBloco.descricao,
+        campus: Number(updatedBloco.campusId)
+      };
+
       if (isEditing) {
         return blocoService.updateBloco(parseInt(id!), payload);
       } else {
@@ -91,7 +98,7 @@ const CadastroBloco: FC = () => {
     const newErrors: Partial<Record<keyof Bloco, string>> = {};
     if (!bloco.nome.trim()) newErrors.nome = 'O nome é obrigatório';
     if (!bloco.tipo.trim()) newErrors.tipo = 'O tipo é obrigatório';
-    if (!bloco.capacidade.trim()) newErrors.capacidade = 'A capacidade é obrigatória';
+    if (!bloco.capacidade.toString().trim()) newErrors.capacidade = 'A capacidade é obrigatória';
     if (!bloco.descricao.trim()) newErrors.descricao = 'A descrição é obrigatória';
     if (!bloco.campusId) newErrors.campusId = 'A seleção do campus é obrigatória';
     setErrors(newErrors);
@@ -139,7 +146,7 @@ const CadastroBloco: FC = () => {
                 <div className="mb-3">
                   <label htmlFor="tipo" className="form-label">Tipo</label>
                   <input
-                    type="text"
+                    type="number"
                     className={`form-control ${errors.tipo ? 'is-invalid' : ''}`}
                     id="tipo"
                     name='tipo'

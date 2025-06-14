@@ -19,7 +19,6 @@ interface Campus {
   nome: string;
 }
 
-
 const ListagemBloco: FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
