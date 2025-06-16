@@ -42,15 +42,17 @@ const CadastroCampus: FC = () => {
 
   const mutation = useMutation({
     mutationFn: (campusData: Campus) => {
+      // O payload agora inclui o status: true em ambos os casos
+      const payload = {
+        nome: campusData.nome,
+        endereco: campusData.endereco,
+        quantidadeBlocos: Number(campusData.quantidadeBlocos),
+        status: true
+      };
+
       if (isEditing) {
-        const payload = { ...campusData, quantidadeBlocos: Number(campusData.quantidadeBlocos) };
         return campusService.updateCampus(parseInt(id!), payload);
       } else {
-        const payload = {
-          ...campusData,
-          quantidadeBlocos: Number(campusData.quantidadeBlocos),
-          status: true
-        };
         return campusService.createCampus(payload);
       }
     },
