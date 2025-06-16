@@ -24,6 +24,16 @@ const entregaService = {
   async deleteEntrega(id: number) {
     const { data } = await api.delete(`/Entrega/${id}`);
     return data;
+  },
+
+  async getTotaisEntregadorData(params: { entregador_Id?: number, dataInicio?: string, dataFim?: string }) {
+    const { data } = await api.get('/Entrega/TotaisEntregadorData', { params });
+    return data;
+  },
+
+  async getTempoMedioEntregaPorEntregador(params: { entregador_id?: number }) {
+    const { data } = await api.get('/Entrega/TempoMedioEntregaPorEntregador', { params });
+    return data;
   }
 };
 

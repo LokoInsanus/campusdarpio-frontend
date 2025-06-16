@@ -21,6 +21,9 @@ const Header: FC = () => {
             <NavLink to="/listagens" className="nav-link text-white" end>Listagens</NavLink>
           </li>
           <li className="nav-item">
+            <NavLink to="/relatorios" className="nav-link text-white" end>Relatorios</NavLink>
+          </li>
+          <li className="nav-item">
             <NavLink to="/cardapio" className="nav-link text-white" end>Cardapio</NavLink>
           </li>
           <li className="nav-item">

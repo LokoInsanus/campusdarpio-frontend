@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import HomePage from './HomePage';
 import Cadastros from './Cadastros';
 import Listagens from './Listagens';
+import Relatorios from './Relatorios'
 import Cardapio from './Cardapio';
 import Pedido from './Pedido';
 import Entrega from './Entrega';
@@ -24,6 +25,12 @@ import ListagemBebida from './listagens/ListagemBebida';
 import ListagemCardapio from './listagens/ListagemCardapio';
 import ListagemPedido from './listagens/ListagemPedido';
 import ListagemEntrega from './listagens/ListagemEntrega';
+import RelatorioRefeicoes from './relatorios/RelatorioRefeicoes'
+import RelatorioBebidas from './relatorios/RelatorioBebidas';
+import RelatorioTotaisCampus from './relatorios/RelatorioTotaisCampus';
+import RelatorioTotaisEntregador from './relatorios/RelatorioTotaisEntregador';
+import RelatorioTempoMedioEntregador from './relatorios/RelatorioTempoMedioEntregador';
+import RelatorioTotaisTipo from './relatorios/RelatorioTotaisTipo';
 
 const App: FC = () => {
   return (
@@ -33,6 +40,7 @@ const App: FC = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/cadastros" element={<Cadastros />} />
         <Route path="/listagens" element={<Listagens />} />
+        <Route path="/Relatorios" element={<Relatorios />} />
         <Route path="/cardapio" element={<Cardapio />} />
         <Route path="/pedido" element={<Pedido />} />
         <Route path="/entrega" element={<Entrega />} />
@@ -63,6 +71,13 @@ const App: FC = () => {
         <Route path="/listagem/cardapio" element={<ListagemCardapio />} />
         <Route path="/listagem/pedido" element={<ListagemPedido />} />
         <Route path="/listagem/entrega" element={<ListagemEntrega />} />
+
+        <Route path="/relatorio/Refeicoes" element={<RelatorioRefeicoes />} />
+        <Route path="/relatorio/Bebidas" element={<RelatorioBebidas />} />
+        <Route path="/relatorio/TotaisCampus" element={<RelatorioTotaisCampus />} />
+        <Route path="/relatorio/TotaisEntregador" element={<RelatorioTotaisEntregador />} />
+        <Route path="/relatorio/TempoMedioEntregador" element={<RelatorioTempoMedioEntregador />} />
+        <Route path="/relatorio/TotaisTipo" element={<RelatorioTotaisTipo />} />
       </Routes>
     </HashRouter>
   );

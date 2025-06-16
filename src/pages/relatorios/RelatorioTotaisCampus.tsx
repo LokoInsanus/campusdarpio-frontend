@@ -1,0 +1,139 @@
+import { type FC, useState, type FormEvent, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
+import campusService from '../../services/campusService';
+import blocoService from '../../services/blocoService';
+import clienteService from '../../services/clienteService';
+import pedidoService from '../../services/pedidoService';
+import { Link } from 'react-router-dom';
+
+interface GenericItem { id: number; nome: string; }
+interface BlocoItem { id: number; nome: string; campusId: number; }
+interface ReportData { totalPedidos: number; valorTotal: number; }
+
+const RelatorioTotaisCampus: FC = () => {
+  const [filters, setFilters] = useState({ campusId: '', blocoId: '', clienteId: '', data: '' });
+  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [isReportLoading, setReportLoading] = useState(false);
+
+  const { data: campi, isLoading: isLoadingCampi } = useQuery<GenericItem[]>({ queryKey: ['campi'], queryFn: campusService.getCampi });
+  const { data: blocos, isLoading: isLoadingBlocos } = useQuery<BlocoItem[]>({ queryKey: ['blocos'], queryFn: blocoService.getBlocos });
+  const { data: clientes, isLoading: isLoadingClientes } = useQuery<GenericItem[]>({ queryKey: ['clientes'], queryFn: clienteService.getClientes });
+
+  const blocosFiltrados = useMemo(() => {
+    if (!filters.campusId) return [];
+    return blocos?.filter(b => b.campusId === Number(filters.campusId)) || [];
+  }, [filters.campusId, blocos]);
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value, ...(name === 'campusId' && { blocoId: '' }) }));
+  };
+
+  const fetchReport = async () => {
+    setReportLoading(true);
+    setReportData(null);
+    try {
+      const params = {
+        campus_id: Number(filters.campusId) || undefined,
+        bloco_id: Number(filters.blocoId) || undefined,
+        cliente_id: Number(filters.clienteId) || undefined,
+        data_hora: filters.data || undefined,
+      };
+      const data = await pedidoService.getTotaisCampusBlocoClienteData(params);
+      setReportData(data);
+      if (!data || data.totalPedidos === 0) {
+        toast.success("Nenhum resultado encontrado para os filtros selecionados.");
+      }
+    } catch (error: any) {
+      toast.error(`Erro ao gerar relatório: ${error.message}`);
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    fetchReport();
+  };
+
+  const isLoading = isLoadingCampi || isLoadingBlocos || isLoadingClientes;
+
+  return (
+    <div className="container mt-5">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="mb-0">Relatório de Totais por Localização</h1>
+        <Link to="/relatorios" className="btn btn-secondary">Voltar</Link>
+      </div>
+
+      <div className="card mb-4">
+        <div className="card-header">Filtros</div>
+        <div className="card-body">
+          {isLoading ? (
+            <p>Carregando filtros...</p>
+          ) : (
+            <form onSubmit={handleSubmit} className="row g-3 align-items-end">
+              <div className="col-md-3">
+                <label htmlFor="campusId" className="form-label">Campus</label>
+                <select id="campusId" name="campusId" className="form-select" value={filters.campusId} onChange={handleFilterChange}>
+                  <option value="">Todos</option>
+                  {campi?.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                </select>
+              </div>
+              <div className="col-md-3">
+                <label htmlFor="blocoId" className="form-label">Bloco</label>
+                <select id="blocoId" name="blocoId" className="form-select" value={filters.blocoId} onChange={handleFilterChange} disabled={!filters.campusId}>
+                  <option value="">Todos</option>
+                  {blocosFiltrados.map(b => <option key={b.id} value={b.id}>{b.nome}</option>)}
+                </select>
+              </div>
+              <div className="col-md-3">
+                <label htmlFor="clienteId" className="form-label">Cliente</label>
+                <select id="clienteId" name="clienteId" className="form-select" value={filters.clienteId} onChange={handleFilterChange}>
+                  <option value="">Todos</option>
+                  {clientes?.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                </select>
+              </div>
+              <div className="col-md-3">
+                <label htmlFor="data" className="form-label">Data</label>
+                <input type="date" id="data" name="data" className="form-control" value={filters.data} onChange={handleFilterChange} />
+              </div>
+              <div className="col-12">
+                <button type="submit" className="btn btn-primary w-100" disabled={isReportLoading}>
+                  {isReportLoading ? 'Gerando...' : 'Gerar Relatório'}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+
+      {isReportLoading ? (
+        <p className="text-center">Carregando...</p>
+      ) : reportData ? (
+        <div className="row">
+          <div className="col-md-6">
+            <div className="card text-center">
+              <div className="card-header">Total de Pedidos</div>
+              <div className="card-body">
+                <h2 className="card-title">{reportData.totalPedidos}</h2>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="card text-center">
+              <div className="card-header">Valor Total Acumulado</div>
+              <div className="card-body">
+                <h2 className="card-title">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(reportData.valorTotal)}</h2>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <p className="text-center text-muted">Nenhum dado para exibir. Por favor, gere o relatório.</p>
+      )}
+    </div>
+  );
+};
+
+export default RelatorioTotaisCampus;

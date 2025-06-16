@@ -24,6 +24,11 @@ const bebidaService = {
   async deleteBebida(id: number) {
     const { data } = await api.delete(`/Bebida/${id}`);
     return data;
+  },
+
+  async getBebidasMaisPedidas(params: { campus_id?: number; bloco_id?: number; data?: string }) {
+    const { data } = await api.get('/Bebida/BebidasMaisPedidas', { params });
+    return data;
   }
 }
 

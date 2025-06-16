@@ -24,6 +24,11 @@ const refeicaoService = {
   async deleteRefeicao(id: number) {
     const { data } = await api.delete(`/Refeicao/${id}`);
     return data;
+  },
+
+  async getRefeicoesMaisPedidas(params: { campus_id?: number; bloco_id?: number; data?: string }) {
+    const { data } = await api.get('/Refeicao/RefeicoesMaisPedidas', { params });
+    return data;
   }
 };
 

@@ -24,6 +24,11 @@ const pedidoService = {
   async deletePedido(id: number) {
     const { data } = await api.delete(`/Pedido/${id}`);
     return data;
+  },
+
+  async getTotaisCampusBlocoClienteData(params: { campus_id?: number, bloco_id?: number, cliente_id?: number, data_hora?: string }) {
+    const { data } = await api.get('/Pedido/TotaisCampusBlocoClienteData', { params });
+    return data;
   }
 };
 

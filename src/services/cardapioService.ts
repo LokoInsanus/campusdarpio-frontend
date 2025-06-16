@@ -24,6 +24,11 @@ const cardapioService = {
   async deleteCardapio(id: number) {
     const { data } = await api.delete(`/Cardapio/${id}`);
     return data;
+  },
+
+  async getTiposdeRefeicoesCardapioData(params: { cardapio_id?: number; data?: string }) {
+    const { data } = await api.get('/Cardapio/TiposdeRefeicoesCardapioData', { params });
+    return data;
   }
 };
 

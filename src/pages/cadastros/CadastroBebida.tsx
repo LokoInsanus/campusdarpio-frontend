@@ -5,7 +5,6 @@ import bebidaService from '../../services/bebidaService';
 import { toast } from 'react-hot-toast';
 import { maskCurrency } from '../../utils/masks';
 
-// Interface do formulário, sem o campo quantidade
 interface BebidaForm {
   nome: string;
   tipo: string;
@@ -44,17 +43,14 @@ const CadastroBebida: FC = () => {
 
   const mutation = useMutation({
     mutationFn: (formData: BebidaForm) => {
-      // Monta o payload final, incluindo quantidade: 0
       const payload = {
         nome: formData.nome,
         tipo: formData.tipo,
         preco: Number(formData.preco.replace(/\D/g, '')) / 100,
-        quantidade: 0, // Valor fixo enviado para a API
+        quantidade: 0,
       };
 
       if (isEditing) {
-        // Na edição, o backend pode ou não precisar da quantidade. 
-        // Se precisar, está correto. Se não, pode ser removido daqui.
         return bebidaService.updateBebida(parseInt(id!), payload);
       } else {
         return bebidaService.createBebida(payload);
@@ -155,8 +151,6 @@ const CadastroBebida: FC = () => {
                   />
                   {errors.preco && <div className="invalid-feedback">{errors.preco}</div>}
                 </div>
-
-                {/* O CAMPO QUANTIDADE FOI REMOVIDO DO FORMULÁRIO */}
 
                 <div className="d-flex">
                   <button type="submit" className="btn btn-success me-2" disabled={mutation.isPending}>
