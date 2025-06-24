@@ -17,16 +17,21 @@ const HomePage: FC = () => {
           </NavLink>
         </div>
         <div className="col-3 offset-3">
+          <NavLink to="/relatorios" className="text-decoration-none w-100" end>
+            <Card title="Relatorios" description="Editar Relatorios" />
+          </NavLink>
+        </div>
+        <div className="col-3">
           <NavLink to="/cardapio" className="text-decoration-none w-100" end>
             <Card title="Cardápio" description="Editar cardápio" />
           </NavLink>
         </div>
-        <div className="col-3">
+        <div className="col-3 offset-3">
           <NavLink to="/pedido" className="text-decoration-none w-100" end>
             <Card title="Pedido" description="Realizar pedidos" />
           </NavLink>
         </div>
-        <div className="col-3 offset-3">
+        <div className="col-3">
           <NavLink to="/entrega" className="text-decoration-none w-100" end>
             <Card title="Entrega" description="Gerenciar entregas" />
           </NavLink>
