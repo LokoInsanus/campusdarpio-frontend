@@ -26,8 +26,8 @@ const pedidoService = {
     return data;
   },
 
-  async getTotaisCampusBlocoClienteData(params: { campus_id?: number, bloco_id?: number, cliente_id?: number, data_hora?: string }) {
-    const { data } = await api.get('/Pedido/TotaisCampusBlocoClienteData', { params });
+  async getTotaisCampusBlocoClienteData(campusId: number, blocoId: number, clienteId: number, dataHora: string) {
+    const { data } = await api.get(`/Pedido/TotaisCampusBlocoClienteData/${campusId}/${blocoId}/${clienteId}/${dataHora}`);
     return data;
   }
 };

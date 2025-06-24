@@ -26,10 +26,10 @@ const bebidaService = {
     return data;
   },
 
-  async getBebidasMaisPedidas(params: { campus_id?: number; bloco_id?: number; data?: string }) {
-    const { data } = await api.get('/Bebida/BebidasMaisPedidas', { params });
+  async getBebidasMaisPedidas(campusId: number, blocoId: number, dataFiltro: string) {
+    const { data } = await api.get(`/Bebida/BebidasMaisPedidas/${campusId}/${blocoId}/${dataFiltro}`);
     return data;
   }
 }
 
-export default bebidaService
+export default bebidaService;

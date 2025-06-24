@@ -26,13 +26,13 @@ const entregaService = {
     return data;
   },
 
-  async getTotaisEntregadorData(params: { entregador_Id?: number, dataInicio?: string, dataFim?: string }) {
-    const { data } = await api.get('/Entrega/TotaisEntregadorData', { params });
+  async getTotaisEntregadorData(entregadorId: number, dataInicio: string, dataFim: string) {
+    const { data } = await api.get(`/Entrega/TotaisEntregadorData/${entregadorId}/${dataInicio}/${dataFim}`);
     return data;
   },
 
-  async getTempoMedioEntregaPorEntregador(params: { entregador_id?: number }) {
-    const { data } = await api.get('/Entrega/TempoMedioEntregaPorEntregador', { params });
+  async getTempoMedioEntregaPorEntregador(entregadorId: number) {
+    const { data } = await api.get(`/Entrega/TempoMedioEntregaPorEntregador/${entregadorId}`);
     return data;
   }
 };

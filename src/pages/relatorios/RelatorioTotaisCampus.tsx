@@ -9,11 +9,13 @@ import { Link } from 'react-router-dom';
 
 interface GenericItem { id: number; nome: string; }
 interface BlocoItem { id: number; nome: string; campusId: number; }
-interface ReportData { totalPedidos: number; valorTotal: number; }
+interface ReportData {
+  total: number;
+}
 
 const RelatorioTotaisCampus: FC = () => {
   const [filters, setFilters] = useState({ campusId: '', blocoId: '', clienteId: '', data: '' });
-  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [reportData, setReportData] = useState<ReportData[]>([]);
   const [isReportLoading, setReportLoading] = useState(false);
 
   const { data: campi, isLoading: isLoadingCampi } = useQuery<GenericItem[]>({ queryKey: ['campi'], queryFn: campusService.getCampi });
@@ -32,17 +34,19 @@ const RelatorioTotaisCampus: FC = () => {
 
   const fetchReport = async () => {
     setReportLoading(true);
-    setReportData(null);
+    setReportData([]);
     try {
-      const params = {
-        campus_id: Number(filters.campusId) || undefined,
-        bloco_id: Number(filters.blocoId) || undefined,
-        cliente_id: Number(filters.clienteId) || undefined,
-        data_hora: filters.data || undefined,
-      };
-      const data = await pedidoService.getTotaisCampusBlocoClienteData(params);
-      setReportData(data);
-      if (!data || data.totalPedidos === 0) {
+      const campusId = Number(filters.campusId) || 0;
+      const blocoId = Number(filters.blocoId) || 0;
+      const clienteId = Number(filters.clienteId) || 0;
+      const dataHora = filters.data || '0';
+
+      const data = await pedidoService.getTotaisCampusBlocoClienteData(campusId, blocoId, clienteId, dataHora);
+
+      const dataArray = Array.isArray(data) ? data : (data ? [data] : []);
+      setReportData(dataArray);
+
+      if (dataArray.length === 0) {
         toast.success("Nenhum resultado encontrado para os filtros selecionados.");
       }
     } catch (error: any) {
@@ -62,7 +66,7 @@ const RelatorioTotaisCampus: FC = () => {
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="mb-0">Relatório de Totais por Localização</h1>
+        <h1 className="mb-0">Relatório de Totais por Campus</h1>
         <Link to="/relatorios" className="btn btn-secondary">Voltar</Link>
       </div>
 
@@ -108,30 +112,26 @@ const RelatorioTotaisCampus: FC = () => {
         </div>
       </div>
 
-      {isReportLoading ? (
-        <p className="text-center">Carregando...</p>
-      ) : reportData ? (
-        <div className="row">
-          <div className="col-md-6">
-            <div className="card text-center">
-              <div className="card-header">Total de Pedidos</div>
-              <div className="card-body">
-                <h2 className="card-title">{reportData.totalPedidos}</h2>
-              </div>
-            </div>
-          </div>
-          <div className="col-md-6">
-            <div className="card text-center">
-              <div className="card-header">Valor Total Acumulado</div>
-              <div className="card-body">
-                <h2 className="card-title">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(reportData.valorTotal)}</h2>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <p className="text-center text-muted">Nenhum dado para exibir. Por favor, gere o relatório.</p>
-      )}
+      <table className="table table-striped">
+        <thead>
+          <tr>
+            <th>Total de Pedidos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {isReportLoading ? (
+            <tr><td colSpan={3} className="text-center">Carregando...</td></tr>
+          ) : reportData.length > 0 ? (
+            reportData.map((item, index) => (
+              <tr key={index}>
+                <td>{item.total}</td>
+              </tr>
+            ))
+          ) : (
+            <tr><td colSpan={3} className="text-center">Nenhum dado para exibir. Por favor, gere o relatório.</td></tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 };

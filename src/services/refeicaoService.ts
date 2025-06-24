@@ -26,8 +26,8 @@ const refeicaoService = {
     return data;
   },
 
-  async getRefeicoesMaisPedidas(params: { campus_id?: number; bloco_id?: number; data?: string }) {
-    const { data } = await api.get('/Refeicao/RefeicoesMaisPedidas', { params });
+  async getRefeicoesMaisPedidas(campusId: number, blocoId: number, dataFiltro: string) {
+    const { data } = await api.get(`/Refeicao/RefeicoesMaisPedidas/${campusId}/${blocoId}/${dataFiltro}`);
     return data;
   }
 };

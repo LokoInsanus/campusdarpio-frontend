@@ -1,4 +1,4 @@
-import { type FC, useState, type FormEvent } from 'react';
+import { type FC, useState, type FormEvent, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import entregadorService from '../../services/entregadorService';
@@ -6,17 +6,30 @@ import entregaService from '../../services/entregaService';
 import { Link } from 'react-router-dom';
 
 interface GenericItem { id: number; nome: string; }
-interface ReportData { nomeEntregador: string; totalEntregas: number; }
+interface ApiReportData {
+  id?: number;
+  entregador_id?: number;
+  total: number;
+}
+interface DisplayReportData {
+  nomeEntregador: string;
+  total: number;
+}
 
 const RelatorioTotaisEntregador: FC = () => {
   const [filters, setFilters] = useState({ entregadorId: '', dataInicio: '', dataFim: '' });
-  const [reportData, setReportData] = useState<ReportData[]>([]);
+  const [reportData, setReportData] = useState<DisplayReportData[]>([]);
   const [isReportLoading, setReportLoading] = useState(false);
 
   const { data: entregadores, isLoading: isLoadingEntregadores } = useQuery<GenericItem[]>({
     queryKey: ['entregadores'],
     queryFn: entregadorService.getEntregadores,
   });
+
+  const entregadorMap = useMemo(() => {
+    if (!entregadores) return new Map<string, string>();
+    return new Map(entregadores.map(e => [String(e.id), e.nome]));
+  }, [entregadores]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -30,14 +43,33 @@ const RelatorioTotaisEntregador: FC = () => {
     }
     setReportLoading(true);
     try {
-      const params = {
-        entregador_Id: Number(filters.entregadorId) || undefined,
-        dataInicio: filters.dataInicio,
-        dataFim: filters.dataFim,
-      };
-      const data = await entregaService.getTotaisEntregadorData(params);
-      setReportData(data);
-      if (data.length === 0) {
+      const idParaApi = Number(filters.entregadorId) || 0;
+      const apiData: ApiReportData[] = await entregaService.getTotaisEntregadorData(idParaApi, filters.dataInicio, filters.dataFim);
+
+      let finalReportData: DisplayReportData[] = [];
+
+      if (filters.entregadorId) {
+        const selectedEntregador = entregadores?.find(e => String(e.id) === filters.entregadorId);
+        if (apiData.length > 0 && selectedEntregador) {
+          finalReportData = [{
+            nomeEntregador: selectedEntregador.nome,
+            total: apiData[0].total,
+          }];
+        }
+      } else {
+        finalReportData = apiData.map(item => {
+          const idDoItem = item.id ?? item.entregador_id;
+          const nome = idDoItem ? entregadorMap.get(String(idDoItem)) : 'Desconhecido';
+          return {
+            nomeEntregador: nome || `Entregador ID: ${idDoItem}`,
+            total: item.total
+          };
+        });
+      }
+
+      setReportData(finalReportData);
+
+      if (finalReportData.length === 0) {
         toast.success("Nenhum resultado encontrado para os filtros selecionados.");
       }
     } catch (error: any) {
@@ -105,7 +137,7 @@ const RelatorioTotaisEntregador: FC = () => {
             reportData.map((item, index) => (
               <tr key={index}>
                 <td>{item.nomeEntregador}</td>
-                <td>{item.totalEntregas}</td>
+                <td>{item.total}</td>
               </tr>
             ))
           ) : (

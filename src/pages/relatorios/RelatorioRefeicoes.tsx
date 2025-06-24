@@ -31,12 +31,11 @@ const RelatorioRefeicoes: FC = () => {
   const fetchReport = async () => {
     setReportLoading(true);
     try {
-      const params = {
-        campus_id: Number(filters.campusId) || undefined,
-        bloco_id: Number(filters.blocoId) || undefined,
-        data: filters.data || undefined,
-      };
-      const data = await refeicaoService.getRefeicoesMaisPedidas(params);
+      const campusId = Number(filters.campusId) || 0;
+      const blocoId = Number(filters.blocoId) || 0;
+      const dataFiltro = filters.data || '0';
+
+      const data = await refeicaoService.getRefeicoesMaisPedidas(campusId, blocoId, dataFiltro);
       setReportData(data);
       if (data.length === 0) {
         toast.success("Nenhum resultado encontrado para os filtros selecionados.");

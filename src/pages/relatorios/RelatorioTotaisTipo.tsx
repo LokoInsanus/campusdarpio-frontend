@@ -4,8 +4,15 @@ import { toast } from 'react-hot-toast';
 import cardapioService from '../../services/cardapioService';
 import { Link } from 'react-router-dom';
 
-interface CardapioItem { id: number; descricao: string; }
-interface ReportData { tipoRefeicao: string; quantidade: number; }
+interface CardapioItem {
+  id: number;
+  descricao: string;
+}
+
+interface ReportData {
+  tipo: string;
+  quantidade: number;
+}
 
 const RelatorioTotaisTipo: FC = () => {
   const [filters, setFilters] = useState({ cardapioId: '', data: '' });
@@ -25,12 +32,12 @@ const RelatorioTotaisTipo: FC = () => {
   const fetchReport = async () => {
     setReportLoading(true);
     try {
-      const params = {
-        cardapio_id: Number(filters.cardapioId) || undefined,
-        data: filters.data || undefined,
-      };
-      const data = await cardapioService.getTiposdeRefeicoesCardapioData(params);
+      const cardapioId = Number(filters.cardapioId) || 0;
+      const dataFiltro = filters.data || '0';
+
+      const data = await cardapioService.getTiposdeRefeicoesCardapioData(cardapioId, dataFiltro);
       setReportData(data);
+
       if (data.length === 0) {
         toast.success("Nenhum resultado encontrado para os filtros selecionados.");
       }
@@ -85,7 +92,7 @@ const RelatorioTotaisTipo: FC = () => {
         <thead>
           <tr>
             <th>Tipo de Refeição</th>
-            <th>Quantidade</th>
+            <th>Quantidade Total</th>
           </tr>
         </thead>
         <tbody>
@@ -94,7 +101,7 @@ const RelatorioTotaisTipo: FC = () => {
           ) : reportData.length > 0 ? (
             reportData.map((item, index) => (
               <tr key={index}>
-                <td>{item.tipoRefeicao}</td>
+                <td>{item.tipo}</td>
                 <td>{item.quantidade}</td>
               </tr>
             ))

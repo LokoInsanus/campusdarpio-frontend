@@ -26,8 +26,8 @@ const cardapioService = {
     return data;
   },
 
-  async getTiposdeRefeicoesCardapioData(params: { cardapio_id?: number; data?: string }) {
-    const { data } = await api.get('/Cardapio/TiposdeRefeicoesCardapioData', { params });
+  async getTiposdeRefeicoesCardapioData(cardapioId: number, dataFiltro: string) {
+    const { data } = await api.get(`/Cardapio/TiposdeRefeicoesCardapioData/${cardapioId}/${dataFiltro}`);
     return data;
   }
 };
