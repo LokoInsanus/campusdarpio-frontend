@@ -72,8 +72,8 @@ const Cardapio: FC = () => {
       const payload = {
         data: newCardapio.data,
         descricao: newCardapio.descricao,
-        refeicaoIds: newCardapio.refeicoes.map(r => r.id),
-        bebidaIds: newCardapio.bebidas.map(b => b.id),
+        refeicoes: newCardapio.refeicoes.map(r => r.id),
+        bebidas: newCardapio.bebidas.map(b => b.id),
       };
       return cardapioService.createCardapio(payload);
     },
