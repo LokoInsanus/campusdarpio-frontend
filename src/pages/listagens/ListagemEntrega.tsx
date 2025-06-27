@@ -59,14 +59,14 @@ const ListagemEntrega: FC = () => {
   };
 
   const handleEdit = (entregaId: number) => {
-    navigate(`/cadastro/entrega/edit/${entregaId}`);
+    navigate(`/entrega/edit/${entregaId}`);
   };
 
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h1 className="mb-0">Entregas</h1>
-        <Link to="/cadastro/entrega" className="btn btn-primary">
+        <Link to="/entrega" className="btn btn-primary">
           Nova Entrega
         </Link>
       </div>

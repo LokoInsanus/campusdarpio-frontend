@@ -40,14 +40,14 @@ const ListagemCardapio: FC = () => {
   };
 
   const handleEdit = (cardapioId: number) => {
-    navigate(`/cadastro/cardapio/edit/${cardapioId}`);
+    navigate(`/cardapio/edit/${cardapioId}`);
   };
 
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h1 className="mb-0">Cardápios</h1>
-        <Link to="/cadastro/cardapio" className="btn btn-primary">
+        <Link to="/cardapio" className="btn btn-primary">
           Novo Cardápio
         </Link>
       </div>
