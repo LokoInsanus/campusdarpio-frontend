@@ -44,6 +44,9 @@ const App: FC = () => {
         <Route path="/cardapio" element={<Cardapio />} />
         <Route path="/pedido" element={<Pedido />} />
         <Route path="/entrega" element={<Entrega />} />
+        <Route path="/cardapio/edit/:id" element={<Cardapio />} />
+        <Route path="/pedido/edit/:id" element={<Pedido />} />
+        <Route path="/entrega/edit/:id" element={<Entrega />} />
 
         <Route path="/cadastro/cliente" element={<CadastroCliente />} />
         <Route path="/cadastro/funcionario" element={<CadastroFuncionario />} />
